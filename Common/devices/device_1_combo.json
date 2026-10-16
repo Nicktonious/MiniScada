@@ -1,0 +1,92 @@
+{
+  "$schema": "../config.schema.json",
+  "schema_version": "1.0",
+  "device_id": "io_module_combo_01",
+  "name": "Комбинированный модуль ввода-вывода МВ-01",
+  "description": "Модуль телемеханики (1 DI, 1 DO, 1 AI с калибровкой y = k*x + b)",
+  "slave_id": 1,
+  "connection": {
+    "type": "tcp",
+    "tcp": {
+      "host": "127.0.0.1",
+      "port": 5020,
+      "timeout_ms": 2000
+    }
+  },
+  "polling": {
+    "enabled": true,
+    "poll_interval_ms": 500,
+    "coefficients_poll_interval_ms": 30000,
+    "max_retries": 3
+  },
+  "channels": [
+    {
+      "channel_id": "di_pump_run_status",
+      "name": "Состояние работы насоса",
+      "type": "DI",
+      "modbus": {
+        "table": "discrete_inputs",
+        "address": 0,
+        "data_type": "bool"
+      },
+      "simulation": {
+        "pattern": "toggle",
+        "initial_value": false,
+        "toggle_interval_seconds": 10.0
+      }
+    },
+    {
+      "channel_id": "do_pump_start_relay",
+      "name": "Реле пуска насоса",
+      "type": "DO",
+      "modbus": {
+        "table": "coils",
+        "address": 0,
+        "data_type": "bool"
+      },
+      "simulation": {
+        "pattern": "constant",
+        "initial_value": false
+      }
+    },
+    {
+      "channel_id": "ai_pipe_pressure",
+      "name": "Давление в напорной магистрали",
+      "type": "AI",
+      "modbus": {
+        "table": "input_registers",
+        "address": 0,
+        "data_type": "uint16"
+      },
+      "physical_range": {
+        "min_val": 0.0,
+        "max_val": 16.0,
+        "unit": "bar",
+        "raw_min": 800,
+        "raw_max": 4000
+      },
+      "coefficients": {
+        "k": {
+          "table": "holding_registers",
+          "address": 100,
+          "data_type": "float32",
+          "default_value": 0.005,
+          "description": "Наклон k"
+        },
+        "b": {
+          "table": "holding_registers",
+          "address": 102,
+          "data_type": "float32",
+          "default_value": -4.0,
+          "description": "Смещение нуля b"
+        }
+      },
+      "simulation": {
+        "pattern": "sine",
+        "period_seconds": 15.0,
+        "noise_amplitude": 0.1,
+        "initial_value": 6.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+/* Центрируем форму по центру доступной области */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+/* Минималистичная карточка формы */
+.form {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid var(--border, #e5e4e7);
+  border-radius: 8px;
+  background-color: var(--bg, #ffffff);
+}
+
+.title {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-h, #111827);
+  text-align: center;
+}
+
+/* Блок для вывода сообщений об ошибках */
+.error {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #dc2626;
+  background-color: #fee2e2;
+  border-radius: 6px;
+}
+
+/* Группа поля ввода: метка (label) над инпутом */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text, #374151);
+}
+
+.input {
+  height: 38px;
+  padding: 0 10px;
+  font-size: 14px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--text-h, #111827);
+  box-sizing: border-box;
+}
+
+/* Выделение поля при активном фокусе */
+.input:focus {
+  outline: none;
+  border-color: var(--accent, #aa3bff);
+}
+
+/* Кнопка отправки формы */
+.submitBtn {
+  height: 38px;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: var(--accent, #aa3bff);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

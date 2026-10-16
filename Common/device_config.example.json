@@ -1,0 +1,108 @@
+{
+  "$schema": "./config.schema.json",
+  "schema_version": "1.0",
+  "device_id": "io_module_combo_01",
+  "name": "Комбинированный модуль ввода-вывода МВ-01",
+  "description": "Модуль телемеханики и сбора данных (1 DI, 1 DO, 1 AI с калибровкой y = k*x + b)",
+  "slave_id": 1,
+  "connection": {
+    "type": "tcp",
+    "tcp": {
+      "host": "127.0.0.1",
+      "port": 5020,
+      "timeout_ms": 2000
+    },
+    "rtu": {
+      "port": "/dev/ttyUSB0",
+      "baudrate": 9600,
+      "data_bits": 8,
+      "parity": "N",
+      "stop_bits": 1,
+      "timeout_ms": 1000
+    }
+  },
+  "polling": {
+    "enabled": true,
+    "poll_interval_ms": 1000,
+    "coefficients_poll_interval_ms": 30000,
+    "max_retries": 3
+  },
+  "channels": [
+    {
+      "channel_id": "di_pump_run_status",
+      "name": "Состояние работы насоса",
+      "description": "Сухой контакт датчика обратной связи включения силового контактора насоса (0 = Остановлен, 1 = Работа)",
+      "type": "DI",
+      "modbus": {
+        "table": "discrete_inputs",
+        "address": 0,
+        "data_type": "bool"
+      },
+      "simulation": {
+        "pattern": "toggle",
+        "initial_value": false,
+        "toggle_interval_seconds": 15.0
+      }
+    },
+    {
+      "channel_id": "do_pump_start_relay",
+      "name": "Реле пуска насоса",
+      "description": "Дискретный выход управления электромагнитным пускателем насоса (0 = Откл, 1 = Вкл)",
+      "type": "DO",
+      "modbus": {
+        "table": "coils",
+        "address": 0,
+        "data_type": "bool"
+      },
+      "simulation": {
+        "pattern": "constant",
+        "initial_value": false
+      }
+    },
+    {
+      "channel_id": "ai_pipe_pressure",
+      "name": "Давление в напорной магистрали",
+      "description": "Аналоговый датчик давления 4..20 мА. Сырые данные АЦП (16-бит) переводятся в физическую величину: y = k * x + b",
+      "type": "AI",
+      "modbus": {
+        "table": "input_registers",
+        "address": 0,
+        "data_type": "uint16",
+        "byte_order": "big"
+      },
+      "physical_range": {
+        "min_val": 0.0,
+        "max_val": 16.0,
+        "unit": "bar",
+        "raw_min": 800,
+        "raw_max": 4000
+      },
+      "coefficients": {
+        "k": {
+          "table": "holding_registers",
+          "address": 100,
+          "data_type": "float32",
+          "byte_order": "big",
+          "word_order": "big",
+          "default_value": 0.005,
+          "description": "Наклон передаточной характеристики (k = delta_y / delta_x = 16.0 / (4000 - 800) = 0.005 бар/код)"
+        },
+        "b": {
+          "table": "holding_registers",
+          "address": 102,
+          "data_type": "float32",
+          "byte_order": "big",
+          "word_order": "big",
+          "default_value": -4.0,
+          "description": "Смещение нуля (b = y_min - k * x_min = 0.0 - 0.005 * 800 = -4.0 бар)"
+        }
+      },
+      "simulation": {
+        "pattern": "sine",
+        "period_seconds": 20.0,
+        "noise_amplitude": 0.15,
+        "initial_value": 6.0
+      }
+    }
+  ]
+}

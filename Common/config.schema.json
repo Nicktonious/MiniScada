@@ -1,0 +1,463 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://miniscada.local/schemas/modbus-device-config.v1.json",
+  "title": "ModbusDeviceConfig",
+  "description": "Единый унифицированный формат конфигурации Modbus-устройства для эмулятора и backend-опросника MiniScada",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "device_id",
+    "name",
+    "slave_id",
+    "connection",
+    "channels"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Версия схемы конфигурации",
+      "enum": ["1.0"]
+    },
+    "device_id": {
+      "type": "string",
+      "description": "Уникальный строковый идентификатор устройства (slug)",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Человекочитаемое название устройства / модуля",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "description": "Подробное описание устройства или технологического узла"
+    },
+    "slave_id": {
+      "type": "integer",
+      "description": "Modbus Unit ID / Slave ID (1..247)",
+      "minimum": 1,
+      "maximum": 247
+    },
+    "connection": {
+      "$ref": "#/$defs/ConnectionConfig"
+    },
+    "polling": {
+      "$ref": "#/$defs/PollingConfig"
+    },
+    "channels": {
+      "type": "array",
+      "description": "Список каналов ввода-вывода (DI, DO, AI)",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/ChannelConfig"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "ConnectionConfig": {
+      "type": "object",
+      "description": "Параметры подключения к устройству (TCP или RTU)",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["tcp", "rtu"],
+          "description": "Протокол физического уровня: Modbus TCP или Modbus RTU"
+        },
+        "tcp": {
+          "$ref": "#/$defs/ModbusTcpSettings"
+        },
+        "rtu": {
+          "$ref": "#/$defs/ModbusRtuSettings"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "tcp" } }
+          },
+          "then": {
+            "required": ["tcp"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "rtu" } }
+          },
+          "then": {
+            "required": ["rtu"]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "ModbusTcpSettings": {
+      "type": "object",
+      "description": "Настройки для Modbus TCP",
+      "required": ["host", "port"],
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "IP-адрес или доменное имя Modbus TCP сервера"
+        },
+        "port": {
+          "type": "integer",
+          "description": "TCP порт (по умолчанию 502)",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 502
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "description": "Таймаут ожидания ответа в миллисекундах",
+          "minimum": 50,
+          "default": 2000
+        }
+      },
+      "additionalProperties": false
+    },
+    "ModbusRtuSettings": {
+      "type": "object",
+      "description": "Настройки для Modbus RTU через последовательный порт",
+      "required": ["port", "baudrate"],
+      "properties": {
+        "port": {
+          "type": "string",
+          "description": "Имя последовательного порта (/dev/ttyUSB0, COM3 и т.д.)"
+        },
+        "baudrate": {
+          "type": "integer",
+          "description": "Скорость передачи данных (бод)",
+          "enum": [1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200],
+          "default": 9600
+        },
+        "data_bits": {
+          "type": "integer",
+          "description": "Количество бит данных (7 или 8)",
+          "enum": [7, 8],
+          "default": 8
+        },
+        "parity": {
+          "type": "string",
+          "description": "Контроль четности: N - None, E - Even, O - Odd",
+          "enum": ["N", "E", "O"],
+          "default": "N"
+        },
+        "stop_bits": {
+          "type": "integer",
+          "description": "Количество стоповых бит (1 или 2)",
+          "enum": [1, 2],
+          "default": 1
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "description": "Таймаут ожидания ответа в миллисекундах",
+          "minimum": 50,
+          "default": 1000
+        }
+      },
+      "additionalProperties": false
+    },
+    "PollingConfig": {
+      "type": "object",
+      "description": "Параметры опроса устройства backend-сервисом",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Включен ли регулярный опрос устройства",
+          "default": true
+        },
+        "poll_interval_ms": {
+          "type": "integer",
+          "description": "Периодичность опроса текущих значений (DI, DO, AI raw) в миллисекундах",
+          "minimum": 50,
+          "default": 1000
+        },
+        "coefficients_poll_interval_ms": {
+          "type": "integer",
+          "description": "Периодичность обновления калибровочных коэффициентов k и b из Holding Registers в миллисекундах",
+          "minimum": 1000,
+          "default": 60000
+        },
+        "max_retries": {
+          "type": "integer",
+          "description": "Число повторных попыток при ошибке связи до фиксации аварии",
+          "minimum": 0,
+          "default": 3
+        }
+      },
+      "additionalProperties": false
+    },
+    "RegisterTable": {
+      "type": "string",
+      "description": "Тип таблицы регистров Modbus",
+      "enum": [
+        "discrete_inputs",
+        "coils",
+        "input_registers",
+        "holding_registers"
+      ]
+    },
+    "DataType": {
+      "type": "string",
+      "description": "Тип данных в регистре Modbus",
+      "enum": [
+        "bool",
+        "uint16",
+        "int16",
+        "uint32",
+        "int32",
+        "float32"
+      ]
+    },
+    "Endianness": {
+      "type": "string",
+      "description": "Порядок байтов или слов",
+      "enum": ["big", "little"],
+      "default": "big"
+    },
+    "ModbusMapping": {
+      "type": "object",
+      "description": "Параметры привязки к Modbus-регистрам",
+      "required": ["table", "address"],
+      "properties": {
+        "table": {
+          "$ref": "#/$defs/RegisterTable"
+        },
+        "address": {
+          "type": "integer",
+          "description": "0-based адрес смещения регистра (offset)",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "data_type": {
+          "$ref": "#/$defs/DataType"
+        },
+        "byte_order": {
+          "$ref": "#/$defs/Endianness"
+        },
+        "word_order": {
+          "$ref": "#/$defs/Endianness"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PhysicalRange": {
+      "type": "object",
+      "description": "Диапазон физической величины датчика",
+      "required": ["min_val", "max_val", "unit"],
+      "properties": {
+        "min_val": {
+          "type": "number",
+          "description": "Минимальное значение измеряемой величины (например, 0.0 В, 4.0 мА, 0.0 бар)"
+        },
+        "max_val": {
+          "type": "number",
+          "description": "Максимальное значение измеряемой величины (например, 10.0 В, 20.0 мА, 16.0 бар)"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Единица измерения физической величины (V, mA, bar, °C, % и т.д.)"
+        },
+        "raw_min": {
+          "type": "integer",
+          "description": "Минимальный сырой код АЦП/датчика (по умолчанию 0)",
+          "default": 0
+        },
+        "raw_max": {
+          "type": "integer",
+          "description": "Максимальный сырой код АЦП/датчика (например, 4095 для 12-бит АЦП или 65535 для 16-бит)",
+          "default": 65535
+        }
+      },
+      "additionalProperties": false
+    },
+    "CoefficientRegister": {
+      "type": "object",
+      "description": "Описание Modbus-регистра коэффициента калибровки (k или b) в таблице Holding Registers",
+      "required": ["address"],
+      "properties": {
+        "table": {
+          "type": "string",
+          "const": "holding_registers",
+          "default": "holding_registers",
+          "description": "Коэффициенты обязаны храниться в Holding Registers"
+        },
+        "address": {
+          "type": "integer",
+          "description": "0-based адрес начального Holding Register для данного коэффициента",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "data_type": {
+          "$ref": "#/$defs/DataType",
+          "default": "float32"
+        },
+        "byte_order": {
+          "$ref": "#/$defs/Endianness",
+          "default": "big"
+        },
+        "word_order": {
+          "$ref": "#/$defs/Endianness",
+          "default": "big"
+        },
+        "default_value": {
+          "type": "number",
+          "description": "Значение коэффициента по умолчанию (используется для инициализации эмулятора)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Пояснение назначения коэффициента"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AICoefficients": {
+      "type": "object",
+      "description": "Коэффициенты линейного преобразования y = k * x + b, размещенные в Holding Registers",
+      "required": ["k", "b"],
+      "properties": {
+        "k": {
+          "$ref": "#/$defs/CoefficientRegister"
+        },
+        "b": {
+          "$ref": "#/$defs/CoefficientRegister"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SimulationConfig": {
+      "type": "object",
+      "description": "Параметры имитации физического процесса эмулятором",
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "enum": ["constant", "sine", "random_walk", "linear_ramp", "toggle", "pulse"],
+          "description": "Алгоритм генерации сигнала в эмуляторе"
+        },
+        "period_seconds": {
+          "type": "number",
+          "description": "Период колебаний/цикла для синуса или пилы",
+          "minimum": 0.1
+        },
+        "noise_amplitude": {
+          "type": "number",
+          "description": "Амплитуда случайного шума (в физических единицах)"
+        },
+        "initial_value": {
+          "description": "Начальное значение (число для AI или boolean для DI/DO)"
+        },
+        "toggle_interval_seconds": {
+          "type": "number",
+          "description": "Интервал автоматического переключения для DI в режиме toggle",
+          "minimum": 0.5
+        }
+      },
+      "additionalProperties": false
+    },
+    "ChannelConfig": {
+      "type": "object",
+      "description": "Конфигурация отдельного канала ввода-вывода",
+      "required": [
+        "channel_id",
+        "name",
+        "type",
+        "modbus"
+      ],
+      "properties": {
+        "channel_id": {
+          "type": "string",
+          "description": "Уникальный строковый идентификатор канала (slug)",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Человекочитаемое имя канала"
+        },
+        "description": {
+          "type": "string",
+          "description": "Подробное описание назначения канала"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["DI", "DO", "AI"],
+          "description": "Тип канала ввода-вывода"
+        },
+        "modbus": {
+          "$ref": "#/$defs/ModbusMapping"
+        },
+        "physical_range": {
+          "$ref": "#/$defs/PhysicalRange"
+        },
+        "coefficients": {
+          "$ref": "#/$defs/AICoefficients"
+        },
+        "simulation": {
+          "$ref": "#/$defs/SimulationConfig"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "DI" } }
+          },
+          "then": {
+            "properties": {
+              "modbus": {
+                "properties": {
+                  "table": {
+                    "enum": ["discrete_inputs", "coils"]
+                  },
+                  "data_type": {
+                    "const": "bool"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "DO" } }
+          },
+          "then": {
+            "properties": {
+              "modbus": {
+                "properties": {
+                  "table": {
+                    "const": "coils"
+                  },
+                  "data_type": {
+                    "const": "bool"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "AI" } }
+          },
+          "then": {
+            "required": ["physical_range", "coefficients"],
+            "properties": {
+              "modbus": {
+                "properties": {
+                  "table": {
+                    "enum": ["input_registers", "holding_registers"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "../config.schema.json",
+  "schema_version": "1.0",
+  "device_id": "temp_module_02",
+  "name": "Модуль термопар МВ-02",
+  "description": "Модуль контроля температуры (2 AI канала)",
+  "slave_id": 2,
+  "connection": {
+    "type": "tcp",
+    "tcp": {
+      "host": "127.0.0.1",
+      "port": 5020,
+      "timeout_ms": 2000
+    }
+  },
+  "polling": {
+    "enabled": true,
+    "poll_interval_ms": 500,
+    "coefficients_poll_interval_ms": 30000,
+    "max_retries": 3
+  },
+  "channels": [
+    {
+      "channel_id": "ai_temp_inlet",
+      "name": "Температура теплоносителя на входе",
+      "type": "AI",
+      "modbus": {
+        "table": "input_registers",
+        "address": 0,
+        "data_type": "uint16"
+      },
+      "physical_range": {
+        "min_val": 0.0,
+        "max_val": 100.0,
+        "unit": "°C",
+        "raw_min": 0,
+        "raw_max": 4000
+      },
+      "coefficients": {
+        "k": {
+          "table": "holding_registers",
+          "address": 100,
+          "data_type": "float32",
+          "default_value": 0.025,
+          "description": "Наклон k (100 / 4000 = 0.025)"
+        },
+        "b": {
+          "table": "holding_registers",
+          "address": 102,
+          "data_type": "float32",
+          "default_value": 0.0,
+          "description": "Смещение нуля b"
+        }
+      },
+      "simulation": {
+        "pattern": "random_walk",
+        "initial_value": 45.0,
+        "noise_amplitude": 0.2
+      }
+    },
+    {
+      "channel_id": "ai_temp_outlet",
+      "name": "Температура теплоносителя на выходе",
+      "type": "AI",
+      "modbus": {
+        "table": "input_registers",
+        "address": 1,
+        "data_type": "uint16"
+      },
+      "physical_range": {
+        "min_val": 0.0,
+        "max_val": 150.0,
+        "unit": "°C",
+        "raw_min": 0,
+        "raw_max": 4000
+      },
+      "coefficients": {
+        "k": {
+          "table": "holding_registers",
+          "address": 104,
+          "data_type": "float32",
+          "default_value": 0.0375,
+          "description": "Наклон k (150 / 4000 = 0.0375)"
+        },
+        "b": {
+          "table": "holding_registers",
+          "address": 106,
+          "data_type": "float32",
+          "default_value": 0.0,
+          "description": "Смещение нуля b"
+        }
+      },
+      "simulation": {
+        "pattern": "sine",
+        "period_seconds": 25.0,
+        "noise_amplitude": 0.3,
+        "initial_value": 75.0
+      }
+    }
+  ]
+}

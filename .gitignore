@@ -1,0 +1,83 @@
+# === Python ===
+# Байт-код и кэш
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Виртуальные окружения
+.venv/
+venv/
+ENV/
+env/
+.env*
+!.env.example
+
+# Дистрибуция и сборка
+build/
+dist/
+*.egg-info/
+sdist/
+var/
+wheels/
+*.manifest
+*.spec
+
+# Тестирование и покрытие
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Базы данных
+*.sqlite3
+*.db
+
+# === React / Node.js ===
+# Зависимости
+node_modules/
+/.pnp
+.pnp.js
+
+# Сборка фронтенда (Vite / CRA / Next.js)
+/dist
+/build
+/.next/
+/out
+
+# Логи и отладка
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Переменные окружения фронтенда (если отличаются от бэка)
+# .env.local
+# .env.development.local
+# .env.test.local
+# .env.production.local
+
+# === IDE и редакторы ===
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# === Операционные системы ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# === Разное ===
+*.log
+*.tmp
+*.temp
